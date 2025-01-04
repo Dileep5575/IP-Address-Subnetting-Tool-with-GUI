@@ -1,0 +1,108 @@
+import PySimpleGUI as gui
+import ipaddress
+import math
+import new
+import random as rand
+ilist = []
+gui.theme("Black")
+layout1 = [[gui.Text("network ip finder", size=30)],
+           [gui.Button("basic", size=8), gui.Button("advanced", size=8)], ]
+window = gui.Window("my app", layout1, size=(300, 200), font=("helvetica", 25))
+while True:
+    event, values = window.read()
+    print(event)
+    print(values)
+    match event:
+        case 'advanced':
+            window.close()
+            new.clear()
+            text1 = gui.Text("Enter the ip address with prefix", size=30)
+            ip = gui.Input(tooltip="eg:10.0.0.0/8...", size=40)
+            text2 = gui.Text("Enter the no of hosts", size=30)
+            hosts = gui.Input(tooltip="50,80,200,300...", size=40)
+            text3 = gui.Text("IP Address Range:", size=40)
+            button1 = gui.Button("enter", key="enter", size=15,)
+            range = gui.Listbox(values=new.get_todo(), key="range", enable_events=True, size=[40, 15])
+            window = gui.Window("my app", layout=[[text1], [ip],
+                                                  [text2], [hosts],
+                                                  [button1], [text3],
+                                                  [range]], font=("helvetica", 20))
+            while True:
+                event, values = window.read()
+                print(event)
+                print(values)
+                match event:
+                    case 'enter':
+                        try:
+                            new.clear()
+                            ilist.clear()
+                            ip = values[0]
+                            hosts = int(values[1])
+                            print(ip, hosts)
+                            if ip.startswith("169.254"):
+                                gui.popup("you have entered the apipa range.")
+                            elif ip.startswith("127"):
+                                gui.popup("you have entered the loop back range. ")
+                            else:
+                                required_host_bits = math.ceil(math.log2(hosts + 2))
+                                p = 32 - required_host_bits
+                                main_network = ipaddress.IPv4Network(ip)
+                                subnets = list(main_network.subnets(new_prefix=p))
+                                for index, subnet in enumerate(subnets):
+                                    out = f"Network {index + 1} : {subnet.network_address}/{p} - {subnet.broadcast_address}/{p}"
+                                    ilist.append(out + "\n")
+                                window['range'].update(values=ilist)
+                                new.store_todo(ilist)
+                        except ValueError:
+                            gui.popup("enter a correct  input values")
+                            continue
+                    case gui.WIN_CLOSED:
+                        break
+        case 'basic':
+            window.close()
+            label = gui.Text("enter the no of hosts:", size=30)
+            input1 = gui.Input(tooltip="50,80,140,280,..", size=40)
+            button1 = gui.Button("enter", key="enter", size=15)
+            range = gui.Listbox(values=new.get_todo(), key="range", enable_events=True, size=[40, 15])
+
+            window = gui.Window("my ip finder", layout=[[label], [input1], [button1], [range]], font=("helvetica", 20))
+            while True:
+                event, values = window.read()
+                print(event)
+                print(values)
+                match event:
+                    case 'enter':
+                        try:
+                            new.clear()
+                            ilist.clear()
+                            hosts = int(values[0])
+                            if hosts <= 256:
+                                o=rand.randint(0,255)
+                                ip = f"192.168.{o}.0/24"
+                            elif hosts <= 65536:
+                                o=rand.randint(16,31)
+                                ip = f"172.{o}.0.0/16"
+                            else:
+                                ip = "10.0.0.0/8"
+                            print(ip, hosts)
+                            if ip.startswith("169.254"):
+                                gui.popup("you have entered the apipa range.")
+                            elif ip.startswith("127"):
+                                gui.popup("you have entered the loop back range. ")
+                            else:
+                                required_host_bits = math.ceil(math.log2(hosts + 2))
+                                p = 32 - required_host_bits
+                                main_network = ipaddress.IPv4Network(ip)
+                                subnets = list(main_network.subnets(new_prefix=p))
+                                for index, subnet in enumerate(subnets):
+                                    out = f"Network {index + 1} : {subnet.network_address}/{p} - {subnet.broadcast_address}/{p}"
+                                    ilist.append(out + "\n")
+                                window['range'].update(values=ilist)
+                                new.store_todo(ilist)
+                        except ValueError:
+                            gui.popup("enter a correct values")
+                            continue
+                    case gui.WIN_CLOSED:
+                        break
+        case gui.WIN_CLOSED:
+            break
