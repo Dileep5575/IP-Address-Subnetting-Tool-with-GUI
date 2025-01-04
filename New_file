@@ -1,0 +1,17 @@
+def get_todo():
+    with open("iprange.txt",'r') as file:
+        range=file.readlines()
+    return range
+
+def store_todo(var):
+    with open("iprange.txt",'w') as file:
+        file.writelines(var)
+
+
+def clear():
+    with open("iprange.txt",'w') as file:
+        file.truncate()
+
+
+import new
+new.clear()
